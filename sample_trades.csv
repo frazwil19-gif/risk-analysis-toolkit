@@ -1,0 +1,11 @@
+date,symbol,strategy,pnl
+2026-01-01,EURUSD,MeanReversion,120
+2026-01-02,GBPUSD,Breakout,-80
+2026-01-03,XAUUSD,TrendPullback,250
+2026-01-04,USDJPY,ORB,90
+2026-01-05,EURUSD,MeanReversion,-40
+2026-01-06,XAUUSD,TrendPullback,180
+2026-01-07,GBPUSD,Breakout,-60
+2026-01-08,USDJPY,ORB,140
+2026-01-09,EURUSD,MeanReversion,70
+2026-01-10,XAUUSD,TrendPullback,-110
