@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="496.506562pt" height="279.650219pt" viewBox="0 0 496.506562 279.650219" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <defs><style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style></defs>
+ <g id="figure_1">
+  <g id="patch_1"><path d="M 0 279.650219 L 496.506562 279.650219 L 496.506562 0 L 0 0 z" style="fill: #ffffff"/></g>
+  <g id="axes_1">
+   <g id="patch_2"><path d="M 62.726563 244.574281 L 489.306562 244.574281 L 489.306562 21.558281 L 62.726563 21.558281 z" style="fill: #ffffff"/></g>
+   <rect x="82.116563" y="21.558281" width="81.642105" height="212.396191" style="fill:#b71c1c" clip-path="url(#clip_rat_ss)"/>
+   <rect x="184.169194" y="21.558281" width="81.642105" height="108.432822" style="fill:#d32f2f" clip-path="url(#clip_rat_ss)"/>
+   <rect x="286.221826" y="21.558281" width="81.642105" height="56.06249" style="fill:#ef9a9a" clip-path="url(#clip_rat_ss)"/>
+   <rect x="388.274457" y="21.558281" width="81.642105" height="22.833077" style="fill:#ffcdd2" clip-path="url(#clip_rat_ss)"/>
+   <line x1="62.726563" y1="21.558281" x2="489.306562" y2="21.558281" style="fill:none;stroke:#000;stroke-width:.7"/>
+   <g id="matplotlib.axis_1">
+    <text style="font-size:10px;text-anchor:middle" x="122.937615" y="259.172719">COVID-19</text>
+    <text style="font-size:10px;text-anchor:middle" x="122.937615" y="270.370531">Crash</text>
+    <text style="font-size:10px;text-anchor:middle" x="224.990247" y="259.172719">Rate</text>
+    <text style="font-size:10px;text-anchor:middle" x="224.990247" y="270.370531">Shock</text>
+    <text style="font-size:10px;text-anchor:middle" x="327.042878" y="259.172719">USD</text>
+    <text style="font-size:10px;text-anchor:middle" x="327.042878" y="270.370531">Strength</text>
+    <text style="font-size:10px;text-anchor:middle" x="429.09551" y="259.172719">Flash</text>
+    <text style="font-size:10px;text-anchor:middle" x="429.09551" y="270.370531">Crash</text>
+   </g>
+   <g id="matplotlib.axis_2">
+    <text style="font-size:10px;text-anchor:end" x="55.726563" y="219.681554">£-200k</text>
+    <text style="font-size:10px;text-anchor:end" x="55.726563" y="171.10054">£-150k</text>
+    <text style="font-size:10px;text-anchor:end" x="55.726563" y="122.519527">£-100k</text>
+    <text style="font-size:10px;text-anchor:end" x="55.726563" y="73.938513">£-50k</text>
+    <text style="font-size:10px;text-anchor:end" x="55.726563" y="25.3575">£0k</text>
+    <text style="font-size:10px;text-anchor:middle" x="14.798438" y="133.066281" transform="rotate(-90 14.798438 133.066281)">P&amp;L Impact</text>
+   </g>
+   <text style="font-size:11px;text-anchor:middle" x="276.016563" y="15.558281">Stress Test Scenarios — Portfolio Impact (Synthetic Demo)</text>
+  </g>
+ </g>
+ <defs><clipPath id="clip_rat_ss"><rect x="62.726563" y="21.558281" width="426.58" height="223.016"/></clipPath></defs>
+</svg>
