@@ -1,0 +1,9 @@
+instrument,asset_class,direction,notional_gbp,weight_pct,current_pnl_gbp
+SP500,Equities,Long,480000,24.0,22400
+EURUSD,FX,Long,380000,19.0,8420
+XAUUSD,Commodities,Long,350000,17.5,18200
+GBPUSD,FX,Short,220000,11.0,-3180
+USDJPY,FX,Long,180000,9.0,2640
+FTSE100,Equities,Long,160000,8.0,3200
+XAGUSD,Commodities,Long,120000,6.0,-2800
+WTI_Crude,Commodities,Long,110000,5.5,-4800
