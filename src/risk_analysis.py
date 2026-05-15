@@ -1,375 +1,507 @@
-"""
-Risk Analysis Toolkit
-======================
-Portfolio-level risk metrics: VaR, CVaR, drawdown, Sharpe, Sortino,
-correlation analysis and stress-scenario testing.
+  """
+Risk Analysis Toolkit — Professional Edition
+==============================================
+Generates a full suite of risk analytics charts and a markdown risk report
+for a synthetic 8-instrument, £2M portfolio.
 
-Dataset: synthetic demo data — not real positions or market data.
-Usage:   python src/risk_analysis.py
-Outputs: reports/charts/*.png  |  reports/*.csv
-"""
+All data is synthetically generated (numpy.random.seed=42) for demonstration
+purposes. This is not real position or market data.
 
-import logging
-import sys
-from pathlib import Path
+Usage:
+    python src/risk_analysis.py
+
+Outputs:
+    reports/charts/*.svg   (8 SVG charts)
+    reports/risk_report.md (markdown risk report)
+"""
 
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use('Agg')
+matplotlib.rcParams['svg.fonttype'] = 'none'
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
+import matplotlib.patches as mpatches
 import numpy as np
-import pandas as pd
+import os
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-ROOT     = Path(__file__).resolve().parent.parent
-DATA_RAW = ROOT / "data" / "raw"
-REPORTS  = ROOT / "reports"
-CHARTS   = REPORTS / "charts"
+# ── Configuration ────────────────────────────────────────────────────────────
+OUT_DIR  = 'reports/charts'
+REPORT   = 'reports/risk_report.md'
+os.makedirs(OUT_DIR, exist_ok=True)
+os.makedirs('reports', exist_ok=True)
 
-for _dir in (CHARTS,):
-    _dir.mkdir(parents=True, exist_ok=True)
+INSTRUMENTS = ['SP500', 'EURUSD', 'GBPUSD', 'GOLD', 'BUND', 'CRUDE', 'NASDAQ', 'USDJPY']
+NOTIONALS   = [450_000, 280_000, 180_000, 320_000, 250_000, 150_000, 220_000, 150_000]
+DIRECTIONS  = [1, 1, -1, 1, 1, 1, 1, 1]          # -1 = Short
+VOLS        = [0.010, 0.006, 0.006, 0.009, 0.004, 0.024, 0.011, 0.007]
+DRIFTS      = [0.0003] * 8
+DAYS        = 30
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s  %(levelname)-8s  %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+rng = np.random.default_rng(42)
+
+# ── Generate synthetic returns ────────────────────────────────────────────────
+raw_returns = np.array([
+    rng.normal(drift, vol, DAYS)
+    for drift, vol in zip(DRIFTS, VOLS)
+])
+
+# Apply direction (short positions negate return)
+signed_returns = raw_returns * np.array(DIRECTIONS)[:, None]
+
+# P&L matrix: instrument × day
+pnl_matrix = signed_returns * np.array(NOTIONALS)[:, None]
+
+# Portfolio daily P&L
+portfolio_pnl = pnl_matrix.sum(axis=0)
+
+# Cumulative P&L and drawdown
+cumulative = np.cumsum(portfolio_pnl)
+drawdown   = cumulative - np.maximum.accumulate(cumulative)
+
+# Risk metrics
+var95        = np.percentile(portfolio_pnl, 5)
+var99        = np.percentile(portfolio_pnl, 1)
+cvar95       = portfolio_pnl[portfolio_pnl <= var95].mean()
+daily_vol    = portfolio_pnl.std()
+daily_vol_pct = daily_vol / sum(NOTIONALS)
+ann_vol      = daily_vol_pct * np.sqrt(252)
+max_dd       = drawdown.min()
+max_dd_pct   = max_dd / sum(NOTIONALS)
+max_loss     = portfolio_pnl.min()
+max_gain     = portfolio_pnl.max()
+positive_days= (portfolio_pnl > 0).sum()
+sharpe_est   = (portfolio_pnl.mean() * 252) / (daily_vol * np.sqrt(252)) if daily_vol > 0 else 0
+
+days = np.arange(1, DAYS + 1)
+weights = np.array(NOTIONALS) / sum(NOTIONALS)
+pnl_std = pnl_matrix.std(axis=1)
+
+# ── Stress scenarios ──────────────────────────────────────────────────────────
+stress_shocks = {
+    'COVID-19 Crash': {
+        'SP500': -0.32, 'EURUSD': -0.03, 'GBPUSD': -0.04,
+        'GOLD': +0.12, 'BUND': +0.04, 'CRUDE': -0.40,
+        'NASDAQ': -0.35, 'USDJPY': -0.06
+    },
+    'Rate Shock': {
+        'SP500': -0.18, 'EURUSD': +0.02, 'GBPUSD': +0.01,
+        'GOLD': -0.08, 'BUND': -0.07, 'CRUDE': +0.40,
+        'NASDAQ': -0.20, 'USDJPY': +0.05
+    },
+    'USD Strength': {
+        'SP500': -0.04, 'EURUSD': -0.06, 'GBPUSD': -0.05,
+        'GOLD': -0.03, 'BUND': +0.01, 'CRUDE': -0.05,
+        'NASDAQ': -0.03, 'USDJPY': +0.07
+    },
+    'Flash Crash': {
+        'SP500': -0.07, 'EURUSD': -0.01, 'GBPUSD': -0.01,
+        'GOLD': +0.02, 'BUND': +0.02, 'CRUDE': -0.04,
+        'NASDAQ': -0.06, 'USDJPY': 0.00
+    },
+}
+
+stress_pnl = {}
+for scenario, shocks in stress_shocks.items():
+    total = sum(
+        shocks[inst] * DIRECTIONS[i] * NOTIONALS[i]
+        for i, inst in enumerate(INSTRUMENTS)
+    )
+    stress_pnl[scenario] = total
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 1 — VaR Distribution
+# ═══════════════════════════════════════════════════════════════════════════════
+fig, ax = plt.subplots(figsize=(9, 4.5))
+n, bins, patches_ = ax.hist(
+    portfolio_pnl, bins=15, color='#546e7a',
+    edgecolor='white', linewidth=0.8, alpha=0.85
 )
-log = logging.getLogger(__name__)
-
-# ── Portfolio configuration ───────────────────────────────────────────────────
-TOTAL_NOTIONAL = 2_000_000  # £2M synthetic starting capital
-
-# Signed weights: positive = long, negative = short
-WEIGHTS: dict[str, float] = {
-    "EURUSD":    +0.190,
-    "GBPUSD":    -0.110,   # short position
-    "USDJPY":    +0.090,
-    "XAUUSD":    +0.175,
-    "XAGUSD":    +0.060,
-    "SP500":     +0.240,
-    "FTSE100":   +0.080,
-    "WTI_Crude": +0.055,
-}
-
-# Pre-defined stress scenarios: instrument → shocked period return
-STRESS_SCENARIOS: dict[str, dict[str, float]] = {
-    "COVID-19 Parallel (Mar 2020)": {
-        "SP500": -0.35, "FTSE100": -0.32, "XAUUSD": +0.12,
-        "XAGUSD": -0.15, "WTI_Crude": -0.40,
-        "EURUSD": -0.03, "GBPUSD": -0.08, "USDJPY": +0.08,
-    },
-    "Rate Shock Parallel (2022)": {
-        "SP500": -0.20, "FTSE100": -0.15, "XAUUSD": -0.08,
-        "XAGUSD": -0.18, "WTI_Crude": +0.40,
-        "EURUSD": -0.08, "GBPUSD": -0.12, "USDJPY": +0.10,
-    },
-    "USD Strength Shock": {
-        "SP500": -0.04, "FTSE100": -0.05, "XAUUSD": -0.06,
-        "XAGUSD": -0.09, "WTI_Crude": -0.05,
-        "EURUSD": -0.05, "GBPUSD": -0.06, "USDJPY": +0.07,
-    },
-    "Flash Crash / Risk-Off Spike": {
-        "SP500": -0.07, "FTSE100": -0.06, "XAUUSD": +0.05,
-        "XAGUSD": +0.04, "WTI_Crude": -0.08,
-        "EURUSD": -0.02, "GBPUSD": -0.03, "USDJPY": +0.04,
-    },
-}
+for patch, left in zip(patches_, bins[:-1]):
+    if left < var95:
+        patch.set_facecolor('#c62828')
+        patch.set_alpha(0.75)
+ax.axvline(var95,  color='#c62828', linestyle='--', linewidth=1.6,
+           label=f'95% VaR  £{var95:,.0f}')
+ax.axvline(cvar95, color='#e65100', linestyle='--', linewidth=1.6,
+           label=f'CVaR (ES) £{cvar95:,.0f}')
+ax.axvline(portfolio_pnl.mean(), color='#2e7d32', linestyle='--', linewidth=1.4,
+           label=f'Mean  £{portfolio_pnl.mean():,.0f}')
+ax.set_xlabel('Daily P&L (£)', fontsize=10)
+ax.set_ylabel('Frequency', fontsize=10)
+ax.set_title('Daily P&L Distribution — 95% VaR & CVaR (Synthetic Demo)',
+             fontweight='bold', fontsize=11)
+ax.legend(fontsize=9)
+ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'£{x:,.0f}'))
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/var_distribution.svg', format='svg')
+plt.close(fig)
+print('  [1/8] var_distribution.svg')
 
 
-# ── Data loading ──────────────────────────────────────────────────────────────
-
-def load_positions(path: Path) -> pd.DataFrame:
-    """Load and validate portfolio positions file."""
-    if not path.exists():
-        log.error(f"Positions file not found: {path}")
-        sys.exit(1)
-    df = pd.read_csv(path)
-    required = {"instrument", "direction", "notional_gbp", "weight_pct"}
-    missing = required - set(df.columns)
-    if missing:
-        log.error(f"Missing columns: {missing}")
-        sys.exit(1)
-    log.info(f"Loaded {len(df)} positions | Total notional: £{df['notional_gbp'].sum():,.0f}")
-    return df
-
-
-def load_returns(path: Path) -> pd.DataFrame:
-    """Load daily instrument return series."""
-    if not path.exists():
-        log.error(f"Returns file not found: {path}")
-        sys.exit(1)
-    df = pd.read_csv(path, parse_dates=["date"])
-    df = df.sort_values("date").reset_index(drop=True)
-    log.info(
-        f"Loaded {len(df)} days of returns "
-        f"({df['date'].min().strftime('%d %b %Y')} – {df['date'].max().strftime('%d %b %Y')})"
-    )
-    return df
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 2 — Drawdown
+# ═══════════════════════════════════════════════════════════════════════════════
+fig, ax = plt.subplots(figsize=(10, 4.5), facecolor='white')
+ax.set_facecolor('#fafafa')
+ax.fill_between(days, drawdown, 0, color='#c62828', alpha=0.35)
+ax.plot(days, drawdown, color='#c62828', linewidth=1.5)
+ax.axhline(0, color='#546e7a', linewidth=0.8, linestyle='--', alpha=0.6)
+worst_day = int(np.argmin(drawdown))
+ax.annotate(
+    f'Worst: £{drawdown[worst_day]:,.0f}',
+    xy=(days[worst_day], drawdown[worst_day]),
+    xytext=(days[worst_day] + 4, drawdown[worst_day] * 0.65),
+    arrowprops=dict(arrowstyle='->', color='#c62828', lw=1.4),
+    fontsize=9, fontweight='bold', color='#c62828'
+)
+ax.set_xlabel('Trading Day', fontsize=10)
+ax.set_ylabel('Drawdown (£)', fontsize=10)
+ax.set_title('Portfolio Drawdown — 30-Day Window (Synthetic Demo)',
+             fontweight='bold', fontsize=12)
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'£{y:,.0f}'))
+ax.grid(axis='both', color='#cccccc', linewidth=0.6, alpha=0.35)
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/drawdown_annotated.svg', format='svg')
+plt.close(fig)
+print('  [2/8] drawdown_annotated.svg')
 
 
-# ── Portfolio return calculation ──────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 3 — Correlation Heatmap
+# ═══════════════════════════════════════════════════════════════════════════════
+corr = np.corrcoef(pnl_matrix)
+fig, ax = plt.subplots(figsize=(5.4, 4.4))
+n_inst = len(INSTRUMENTS)
 
-def compute_portfolio_pnl(returns: pd.DataFrame) -> pd.Series:
-    """Compute daily portfolio P&L (£) using signed notional weights."""
-    instruments = list(WEIGHTS.keys())
-    missing = set(instruments) - set(returns.columns)
-    if missing:
-        log.error(f"Missing return columns: {missing}")
-        sys.exit(1)
-    daily_pnl = sum(
-        returns[inst] * weight * TOTAL_NOTIONAL
-        for inst, weight in WEIGHTS.items()
-    )
-    return daily_pnl.rename("portfolio_pnl")
+def corr_colour(v: float) -> str:
+    if   v >  0.5: return '#1a6e2f'
+    elif v >  0.2: return '#a8d5a2'
+    elif v > -0.2: return '#fffde7'
+    elif v > -0.5: return '#ffab91'
+    else:          return '#b71c1c'
 
-
-# ── Risk metrics ──────────────────────────────────────────────────────────────
-
-def historical_var(daily_pnl: pd.Series, confidence: float) -> float:
-    """1-day historical-simulation VaR at given confidence level."""
-    return float(np.percentile(daily_pnl, (1 - confidence) * 100))
-
-
-def conditional_var(daily_pnl: pd.Series, confidence: float) -> float:
-    """Conditional VaR (Expected Shortfall) beyond the VaR threshold."""
-    threshold = historical_var(daily_pnl, confidence)
-    tail = daily_pnl[daily_pnl <= threshold]
-    return float(tail.mean()) if len(tail) > 0 else threshold
-
-
-def compute_risk_metrics(daily_pnl: pd.Series) -> dict:
-    """Compute full suite of portfolio risk KPIs."""
-    equity   = daily_pnl.cumsum() + TOTAL_NOTIONAL
-    drawdown = equity - equity.cummax()
-
-    ann_vol = daily_pnl.std() * np.sqrt(252) / TOTAL_NOTIONAL
-    ann_ret = daily_pnl.mean() * 252 / TOTAL_NOTIONAL
-    sharpe  = ann_ret / ann_vol if ann_vol > 0 else 0.0
-
-    downside_std = daily_pnl[daily_pnl < 0].std() * np.sqrt(252) / TOTAL_NOTIONAL
-    sortino = ann_ret / downside_std if downside_std > 0 else 0.0
-
-    var_95  = historical_var(daily_pnl, 0.95)
-    var_99  = historical_var(daily_pnl, 0.99)
-    cvar_95 = conditional_var(daily_pnl, 0.95)
-
-    return {
-        "Total Notional Exposure":       f"£{TOTAL_NOTIONAL:,.0f}",
-        "Observation Days":              str(len(daily_pnl)),
-        "1-Day VaR (95% confidence)": f"£{var_95:,.0f}",
-        "1-Day VaR (99% confidence)": f"£{var_99:,.0f}",
-        "CVaR / Expected Shortfall (95%)": f"£{cvar_95:,.0f}",
-        "Annualised Volatility":         f"{ann_vol:.2%}",
-        "Max 1-Day Loss":                f"£{daily_pnl.min():,.0f}",
-        "Max 1-Day Gain":                f"£{daily_pnl.max():,.0f}",
-        "Max Drawdown (£)":              f"£{drawdown.min():,.0f}",
-        "Max Drawdown (%)": f"{drawdown.min() / TOTAL_NOTIONAL:.2%}",
-        "Estimated Annualised Sharpe":   f"{sharpe:.2f}",
-        "Estimated Sortino Ratio":       f"{sortino:.2f}",
-        "Positive Return Days":          f"{(daily_pnl > 0).sum()} / {len(daily_pnl)}",
-    }
-
-
-def compute_stress_impacts() -> pd.DataFrame:
-    """Apply pre-defined stress scenarios and compute portfolio P&L impact."""
-    rows = []
-    for scenario, shocks in STRESS_SCENARIOS.items():
-        pnl_raw = sum(
-            shocks.get(inst, 0.0) * WEIGHTS[inst] * TOTAL_NOTIONAL
-            for inst in WEIGHTS
+for i in range(n_inst):
+    for j in range(n_inst):
+        rect = mpatches.FancyBboxPatch(
+            (j, n_inst - 1 - i), 1, 1,
+            boxstyle='square,pad=0', linewidth=0.8,
+            edgecolor='white', facecolor=corr_colour(corr[i, j])
         )
-        pct = pnl_raw / TOTAL_NOTIONAL
-        rows.append({
-            "Scenario":         scenario,
-            "pnl_raw":          pnl_raw,
-            "Portfolio_PnL":    f"£{pnl_raw:,.0f}",
-            "Portfolio_Return": f"{pct:.2%}",
-            "Severity": (
-                "Critical" if pct < -0.15 else
-                "Severe"   if pct < -0.08 else
-                "Moderate" if pct < -0.03 else
-                "Low"
-            ),
-        })
-    return pd.DataFrame(rows)
+        ax.add_patch(rect)
+        tc = 'white' if abs(corr[i, j]) > 0.5 else '#222222'
+        ax.text(j + 0.5, n_inst - 0.5 - i, f'{corr[i, j]:.2f}',
+                ha='center', va='center', fontsize=7.5, color=tc)
+
+ax.set_xlim(0, n_inst)
+ax.set_ylim(0, n_inst)
+ax.set_xticks([x + 0.5 for x in range(n_inst)])
+ax.set_xticklabels(INSTRUMENTS, fontsize=8, rotation=45, ha='right')
+ax.set_yticks([y + 0.5 for y in range(n_inst)])
+ax.set_yticklabels(INSTRUMENTS[::-1], fontsize=8)
+ax.set_title('Instrument Return Correlations (Synthetic Demo)',
+             fontweight='bold', fontsize=10)
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/correlation_heatmap.svg', format='svg')
+plt.close(fig)
+print('  [3/8] correlation_heatmap.svg')
 
 
-# ── Charts ────────────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 4 — Stress Test
+# ═══════════════════════════════════════════════════════════════════════════════
+scenario_labels = list(stress_pnl.keys())
+scenario_values = list(stress_pnl.values())
+stress_colors   = ['#b71c1c', '#c62828', '#e53935', '#ef5350']
 
-def chart_pnl_distribution(daily_pnl: pd.Series):
-    """Daily P&L histogram with 95% VaR marker."""
-    var_95 = historical_var(daily_pnl, 0.95)
-
-    fig, ax = plt.subplots(figsize=(11, 5))
-    ax.hist(daily_pnl.values, bins=18, color="#1f77b4", alpha=0.75, edgecolor="white")
-    ax.axvline(var_95, color="#d62728", linewidth=1.8, linestyle="--",
-               label=f"95% VaR: £{var_95:,.0f}")
-    ax.axvline(float(daily_pnl.mean()), color="#2ca02c", linewidth=1.5, linestyle="--",
-               label=f"Mean: £{daily_pnl.mean():,.0f}")
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"£{v:,.0f}"))
-    ax.set_title("Daily Portfolio P&L Distribution (Synthetic Demo Data)",
-                 fontsize=13, fontweight="bold", pad=12)
-    ax.set_xlabel("Daily P&L (£)", labelpad=8)
-    ax.set_ylabel("Frequency", labelpad=8)
-    ax.legend(framealpha=0.8)
-    fig.tight_layout()
-    fig.savefig(CHARTS / "pnl_distribution.png", dpi=150)
-    plt.close()
-    log.info("Saved pnl_distribution.png")
-
-
-def chart_drawdown(daily_pnl: pd.Series):
-    """Drawdown from rolling peak equity."""
-    equity   = daily_pnl.cumsum() + TOTAL_NOTIONAL
-    drawdown = equity - equity.cummax()
-    x        = list(range(len(drawdown)))
-
-    fig, ax = plt.subplots(figsize=(12, 4))
-    ax.fill_between(x, drawdown.values, 0, color="#d62728", alpha=0.35)
-    ax.plot(x, drawdown.values, color="#d62728", linewidth=1.5)
-    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"£{v:,.0f}"))
-    ax.set_title("Portfolio Drawdown from Rolling Peak (Synthetic Demo Data)",
-                 fontsize=13, fontweight="bold", pad=12)
-    ax.set_xlabel("Trading Day", labelpad=8)
-    ax.set_ylabel("Drawdown (£)", labelpad=8)
-    fig.tight_layout()
-    fig.savefig(CHARTS / "drawdown.png", dpi=150)
-    plt.close()
-    log.info("Saved drawdown.png")
-
-
-def chart_correlation(returns: pd.DataFrame):
-    """Pearson correlation heatmap across all instruments."""
-    instruments = list(WEIGHTS.keys())
-    corr = returns[instruments].corr().values
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    im = ax.imshow(corr, cmap="RdYlGn", vmin=-1, vmax=1, aspect="auto")
-    plt.colorbar(im, ax=ax, label="Pearson Correlation")
-    ax.set_xticks(range(len(instruments)))
-    ax.set_yticks(range(len(instruments)))
-    ax.set_xticklabels(instruments, rotation=45, ha="right")
-    ax.set_yticklabels(instruments)
-    for i in range(len(instruments)):
-        for j in range(len(instruments)):
-            ax.text(j, i, f"{corr[i, j]:.2f}", ha="center", va="center",
-                    fontsize=8,
-                    color="white" if abs(corr[i, j]) > 0.6 else "black")
-    ax.set_title("Instrument Return Correlation Matrix",
-                 fontsize=13, fontweight="bold", pad=12)
-    fig.tight_layout()
-    fig.savefig(CHARTS / "correlation_matrix.png", dpi=150)
-    plt.close()
-    log.info("Saved correlation_matrix.png")
-
-
-def chart_stress_test(stress_df: pd.DataFrame):
-    """Horizontal bar chart of stress scenario portfolio P&L impacts."""
-    pnl_vals = stress_df["pnl_raw"].tolist()
-    colors   = [
-        "#d62728" if v < -100_000 else
-        "#ff7f0e" if v < -30_000 else
-        "#2ca02c"
-        for v in pnl_vals
-    ]
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-    bars = ax.barh(stress_df["Scenario"], pnl_vals,
-                   color=colors, height=0.45, edgecolor="white")
-    ax.axvline(0, color="black", linewidth=0.8)
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda v, _: f"£{v:,.0f}"))
-    ax.set_title("Stress Test Scenarios — Estimated Portfolio P&L Impact",
-                 fontsize=13, fontweight="bold", pad=12)
-    ax.set_xlabel("Estimated P&L Impact (£)", labelpad=8)
-    for bar, val, ret in zip(bars, pnl_vals, stress_df["Portfolio_Return"]):
-        offset = -4000 if val < 0 else 4000
-        ax.text(val + offset, bar.get_y() + bar.get_height() / 2,
-                f"£{val:,.0f}  ({ret})",
-                va="center", ha="right" if val < 0 else "left", fontsize=8.5)
-    fig.tight_layout()
-    fig.savefig(CHARTS / "stress_scenarios.png", dpi=150)
-    plt.close()
-    log.info("Saved stress_scenarios.png")
-
-
-def chart_exposure_breakdown(positions: pd.DataFrame):
-    """Donut chart of gross notional exposure by instrument."""
-    colors_list = [
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
-        "#9467bd", "#8c564b", "#e377c2", "#17becf",
-    ]
-    fig, ax = plt.subplots(figsize=(9, 7))
-    wedges, texts, autotexts = ax.pie(
-        positions["notional_gbp"],
-        labels=positions["instrument"],
-        autopct="%1.1f%%",
-        colors=colors_list[:len(positions)],
-        startangle=90,
-        wedgeprops={"edgecolor": "white", "linewidth": 1.5},
-        pctdistance=0.82,
+fig, ax = plt.subplots(figsize=(8, 3.8), facecolor='white')
+ax.set_facecolor('#fafafa')
+bars = ax.barh(
+    scenario_labels,
+    [abs(v) for v in scenario_values],
+    color=stress_colors, edgecolor='white', linewidth=0.8, height=0.55
+)
+for bar, val in zip(bars, scenario_values):
+    ax.text(
+        bar.get_width() + 3_000,
+        bar.get_y() + bar.get_height() / 2,
+        f'£{val:,.0f}', va='center', fontsize=9, color='#212121'
     )
-    for at in autotexts:
-        at.set_fontsize(8.5)
-    ax.set_title(
-        "Gross Notional Exposure by Instrument\n"
-        "£2,000,000 Total | Synthetic Demo Data",
-        fontsize=12, fontweight="bold", pad=12,
+ax.set_xlabel('Estimated Loss (£)', fontsize=10)
+ax.set_title(
+    'Stress Test Scenarios — Estimated Portfolio P&L Impact (Synthetic)',
+    fontweight='bold', fontsize=11
+)
+ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'£{-x:,.0f}'))
+ax.invert_yaxis()
+ax.grid(axis='x', color='#cccccc', linewidth=0.6, alpha=0.4)
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/stress_test.svg', format='svg')
+plt.close(fig)
+print('  [4/8] stress_test.svg')
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 5 — Exposure Breakdown
+# ═══════════════════════════════════════════════════════════════════════════════
+fig, (ax1, ax2) = plt.subplots(
+    1, 2, figsize=(11.8, 5),
+    gridspec_kw={'width_ratios': [1.35, 1]},
+    facecolor='white'
+)
+fig.suptitle(
+    'Portfolio Exposure & Composition — £2,000,000 (Synthetic Demo)',
+    fontweight='bold', fontsize=12
+)
+
+bar_colors = ['#1565c0' if d == 1 else '#c62828' for d in DIRECTIONS]
+ax1.set_facecolor('#fafafa')
+bars1 = ax1.barh(
+    INSTRUMENTS, NOTIONALS,
+    color=bar_colors, edgecolor='white', linewidth=0.8, height=0.55
+)
+for b, n_, d in zip(bars1, NOTIONALS, DIRECTIONS):
+    lbl = f'£{n_:,}  [{"Long" if d == 1 else "Short"}]'
+    ax1.text(
+        b.get_width() + 4_000,
+        b.get_y() + b.get_height() / 2,
+        lbl, va='center', fontsize=8, color='#212121'
     )
-    fig.tight_layout()
-    fig.savefig(CHARTS / "exposure_breakdown.png", dpi=150)
-    plt.close()
-    log.info("Saved exposure_breakdown.png")
+ax1.set_xlabel('Notional Exposure (£)', fontsize=10)
+ax1.set_title('Notional by Instrument', fontweight='bold', fontsize=12)
+ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'£{x/1000:.0f}k'))
+ax1.grid(axis='x', color='#cccccc', linewidth=0.6, alpha=0.35)
+leg_handles = [
+    mpatches.Patch(color='#1565c0', label='Long'),
+    mpatches.Patch(color='#c62828', label='Short'),
+]
+ax1.legend(handles=leg_handles, fontsize=8, loc='lower right')
+ax1.text(
+    0.01, -0.09, 'Total Portfolio: £2,000,000',
+    transform=ax1.transAxes, fontsize=9, color='#546e7a', style='italic'
+)
+
+PIE_COLORS = [
+    '#1565c0', '#2e7d32', '#c62828', '#e65100',
+    '#6a1b9a', '#546e7a', '#00838f', '#558b2f'
+]
+ax2.pie(
+    weights, labels=INSTRUMENTS, autopct='%1.1f%%',
+    colors=PIE_COLORS, startangle=90,
+    textprops={'fontsize': 8},
+    wedgeprops={'linewidth': 1.5, 'edgecolor': 'white'}
+)
+ax2.set_title('Portfolio Weight (%)', fontweight='bold', fontsize=12)
+
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/exposure_breakdown.svg', format='svg')
+plt.close(fig)
+print('  [5/8] exposure_breakdown.svg')
 
 
-# ── Exports ───────────────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 6 — Risk Contribution
+# ═══════════════════════════════════════════════════════════════════════════════
+sorted_idx = np.argsort(pnl_std)[::-1]
+max_std    = pnl_std.max()
 
-def export_reports(metrics: dict, stress_df: pd.DataFrame):
-    pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"]).to_csv(
-        REPORTS / "risk_metrics.csv", index=False
+def risk_colour(v: float) -> str:
+    t = v / max_std
+    r = int(198 * t + 21  * (1 - t))
+    g = int(40  * t + 101 * (1 - t))
+    b = int(40  * t + 58  * (1 - t))
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+fig, ax = plt.subplots(figsize=(9, 4), facecolor='white')
+ax.set_facecolor('#fafafa')
+sorted_instr = [INSTRUMENTS[i] for i in sorted_idx]
+sorted_std   = [pnl_std[i]     for i in sorted_idx]
+bars = ax.bar(
+    sorted_instr, sorted_std,
+    color=[risk_colour(v) for v in sorted_std],
+    edgecolor='white', linewidth=0.8
+)
+for bar, val in zip(bars, sorted_std):
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height() + 12,
+        f'£{val:,.0f}',
+        ha='center', va='bottom', fontsize=8.5, color='#212121'
     )
-    log.info("Saved risk_metrics.csv")
-
-    export_cols = ["Scenario", "Portfolio_PnL", "Portfolio_Return", "Severity"]
-    stress_df[export_cols].to_csv(REPORTS / "stress_scenarios.csv", index=False)
-    log.info("Saved stress_scenarios.csv")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
-
-def main():
-    log.info("── Risk Analysis Toolkit ────────────────────────")
-    positions = load_positions(DATA_RAW / "portfolio_positions.csv")
-    returns   = load_returns(DATA_RAW / "instrument_returns.csv")
-    daily_pnl = compute_portfolio_pnl(returns)
-    metrics   = compute_risk_metrics(daily_pnl)
-    stress_df = compute_stress_impacts()
-
-    print("\n" + "=" * 60)
-    print("  PORTFOLIO RISK SUMMARY — SYNTHETIC DEMO DATA")
-    print("=" * 60)
-    for metric, value in metrics.items():
-        print(f"  {metric:<38} {value}")
-    print("=" * 60)
-
-    print("\n  STRESS TEST RESULTS:")
-    print("-" * 60)
-    for _, row in stress_df.iterrows():
-        print(f"  {row['Scenario']:<42} {row['Portfolio_PnL']}  ({row['Portfolio_Return']})  [{row['Severity']}]")
-    print("=" * 60 + "\n")
-
-    log.info("Generating charts…")
-    chart_pnl_distribution(daily_pnl)
-    chart_drawdown(daily_pnl)
-    chart_correlation(returns)
-    chart_stress_test(stress_df)
-    chart_exposure_breakdown(positions)
-
-    log.info("Exporting reports…")
-    export_reports(metrics, stress_df)
-
-    log.info("Done. All outputs saved to reports/")
+ax.set_ylabel('Daily P&L Std Dev (£)', fontsize=10)
+ax.set_title('Volatility Contribution by Instrument (Synthetic Demo)',
+             fontweight='bold', fontsize=11)
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'£{y:,.0f}'))
+ax.grid(axis='y', color='#cccccc', linewidth=0.6, alpha=0.4)
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/risk_contribution.svg', format='svg')
+plt.close(fig)
+print('  [6/8] risk_contribution.svg')
 
 
-if __name__ == "__main__":
-    main()
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 7 — Return Stats
+# ═══════════════════════════════════════════════════════════════════════════════
+fig, axes = plt.subplots(2, 4, figsize=(14, 6), facecolor='white')
+fig.suptitle('Return Distributions by Instrument (Synthetic Demo)',
+             fontweight='bold', fontsize=12)
+INST_COLORS = [
+    '#1565c0', '#2e7d32', '#c62828', '#e65100',
+    '#6a1b9a', '#546e7a', '#00838f', '#558b2f'
+]
+for ax_, inst, col, vol, raw_ret in zip(
+        axes.flat, INSTRUMENTS, INST_COLORS, VOLS, raw_returns
+):
+    ax_.set_facecolor('#fafafa')
+    ax_.hist(raw_ret, bins=10, color=col, edgecolor='white', linewidth=0.6, alpha=0.85)
+    ax_.set_title(inst, fontsize=9, fontweight='bold')
+    ax_.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x*100:.1f}%'))
+    ann_vol_i = vol * np.sqrt(252) * 100
+    ax_.text(
+        0.97, 0.92, f'σ≈{ann_vol_i:.1f}%',
+        transform=ax_.transAxes, fontsize=7.5, ha='right', va='top',
+        color='#212121', bbox=dict(boxstyle='round,pad=0.2', fc='white', alpha=0.7)
+    )
+    ax_.tick_params(labelsize=7)
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/return_stats.svg', format='svg')
+plt.close(fig)
+print('  [7/8] return_stats.svg')
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CHART 8 — KPI Risk Panel
+# ═══════════════════════════════════════════════════════════════════════════════
+KPIS = [
+    ('Portfolio Size',        '£2,000,000',                        '#1565c0'),
+    ('95% VaR (daily)',       f'£{var95:,.0f}',                    '#c62828'),
+    ('CVaR (95%)',            f'£{cvar95:,.0f}',                   '#e65100'),
+    ('Max Drawdown',          f'£{max_dd:,.0f}',                   '#c62828'),
+    ('Portfolio Vol (daily)', f'{daily_vol_pct * 100:.2f}%',       '#6a1b9a'),
+    ('Instruments',           '8',                                 '#2e7d32'),
+]
+
+fig, axes = plt.subplots(2, 3, figsize=(10.9, 3.9))
+fig.suptitle('Risk Dashboard — Portfolio Overview (Synthetic Demo)',
+             fontweight='bold', fontsize=13)
+for ax_, (label, value, color) in zip(axes.flat, KPIS):
+    ax_.set_facecolor('white')
+    for spine in ax_.spines.values():
+        spine.set_edgecolor(color)
+        spine.set_linewidth(1.5)
+    header = mpatches.FancyBboxPatch(
+        (0, 0.78), 1, 0.22,
+        boxstyle='square,pad=0',
+        transform=ax_.transAxes,
+        facecolor=color, alpha=0.85, clip_on=False, zorder=2
+    )
+    ax_.add_patch(header)
+    ax_.text(
+        0.5, 0.895, label,
+        transform=ax_.transAxes, ha='center', va='center',
+        fontsize=8.5, fontweight='bold', color='#546e7a', zorder=3
+    )
+    ax_.text(
+        0.5, 0.42, value,
+        transform=ax_.transAxes, ha='center', va='center',
+        fontsize=13, fontweight='bold', color=color
+    )
+    ax_.set_xticks([])
+    ax_.set_yticks([])
+fig.tight_layout()
+fig.savefig(f'{OUT_DIR}/kpi_risk_panel.svg', format='svg')
+plt.close(fig)
+print('  [8/8] kpi_risk_panel.svg')
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RISK REPORT
+# ═══════════════════════════════════════════════════════════════════════════════
+report_lines = [
+    '# Risk Report — Synthetic Portfolio',
+    '> **Data note**: All positions and returns are synthetically generated (numpy seed=42).',
+    '> This report is for demonstration purposes only — not real positions or market data.',
+    '',
+    '---',
+    '',
+    '## Executive Summary',
+    '',
+    f'This report covers a synthetic £2,000,000 multi-asset portfolio comprising 8 instruments',
+    f'across equities (SP500, NASDAQ), FX (EURUSD, GBPUSD short, USDJPY), commodities',
+    f'(GOLD, CRUDE), and fixed income (BUND). Analysis is based on {DAYS} days of synthetic',
+    f'daily returns generated with `numpy.random.seed(42)`.',
+    '',
+    f'The portfolio carries a 1-day 95% VaR of **£{var95:,.0f}** and a CVaR of **£{cvar95:,.0f}**,',
+    f'representing {abs(var95)/sum(NOTIONALS)*100:.2f}% and {abs(cvar95)/sum(NOTIONALS)*100:.2f}% of total notional respectively.',
+    f'The largest single-day stress loss scenario (COVID-19 Crash parallel) is estimated at',
+    f'**£{abs(stress_pnl["COVID-19 Crash"]):,.0f} ({stress_pnl["COVID-19 Crash"]/sum(NOTIONALS)*100:.1f}% of portfolio)**.',
+    '',
+    '---',
+    '',
+    '## Portfolio Overview',
+    '',
+    '| Instrument | Asset Class | Direction | Notional (£) | Weight |',
+    '|---|---|---|---|---|',
+]
+assет_classes = {
+    'SP500': 'Equities', 'EURUSD': 'FX', 'GBPUSD': 'FX',
+    'GOLD': 'Commodities', 'BUND': 'Fixed Income', 'CRUDE': 'Commodities',
+    'NASDAQ': 'Equities', 'USDJPY': 'FX'
+}
+for inst, notional, direction in zip(INSTRUMENTS, NOTIONALS, DIRECTIONS):
+    dir_str = 'Long' if direction == 1 else '**Short**'
+    wt = notional / sum(NOTIONALS) * 100
+    report_lines.append(
+        f'| {inst} | {assет_classes[inst]} | {dir_str} | £{notional:,} | {wt:.1f}% |'
+    )
+report_lines += [
+    f'| **TOTAL** | | | **£{sum(NOTIONALS):,}** | **100.0%** |',
+    '',
+    '---',
+    '',
+    '## Key Risk Metrics',
+    '',
+    '| Metric | Value |',
+    '|---|---|',
+    f'| Total Notional Exposure | £{sum(NOTIONALS):,} |',
+    f'| Observation Days | {DAYS} |',
+    f'| 1-Day VaR (95% confidence) | £{var95:,.0f} |',
+    f'| 1-Day VaR (99% confidence) | £{var99:,.0f} |',
+    f'| CVaR / Expected Shortfall (95%) | £{cvar95:,.0f} |',
+    f'| Daily Portfolio Volatility (£) | £{daily_vol:,.0f} |',
+    f'| Daily Portfolio Volatility (%) | {daily_vol_pct*100:.3f}% |',
+    f'| Annualised Volatility | {ann_vol*100:.2f}% |',
+    f'| Max Drawdown (30-day window) | £{max_dd:,.0f} ({max_dd_pct*100:.2f}%) |',
+    f'| Max Single-Day Loss | £{max_loss:,.0f} |',
+    f'| Max Single-Day Gain | +£{max_gain:,.0f} |',
+    f'| Estimated Annualised Sharpe | {sharpe_est:.2f} |',
+    f'| Positive Return Days | {positive_days} / {DAYS} |',
+    '',
+    '> Note: Exact values are computed from synthetic data at runtime by `src/risk_analysis.py`.',
+    '> The numbers above are representative outputs from seed=42.',
+    '',
+    '---',
+    '',
+    '## Stress Test Results',
+    '',
+    '| Scenario | Estimated P&L Impact | % of Portfolio |',
+    '|---|---|---|',
+]
+for scenario, pnl_val in stress_pnl.items():
+    report_lines.append(
+        f'| {scenario} | £{pnl_val:,.0f} | {pnl_val/sum(NOTIONALS)*100:.2f}% |'
+    )
+report_lines += [
+    '',
+    '> Stress scenarios are illustrative point-in-time shocks calibrated to historical analogues.',
+    '> They are **not** probability-weighted estimates.',
+    '',
+    '---',
+    '',
+    '*Generated by risk-analysis-toolkit | Synthetic demo data | Not investment advice*',
+]
+
+with open(REPORT, 'w', encoding='utf-8') as f:
+    f.write('\n'.join(report_lines))
+print(f'  Risk report → {REPORT}')
+
+print('\n✓ All outputs generated successfully.')
