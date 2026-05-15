@@ -1,1 +1,215 @@
-see-below
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="784.8pt" height="280.597969pt" viewBox="0 0 784.8 280.597969" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 280.597969 
+L 784.8 280.597969 
+L 784.8 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 30.312 151.531369 
+L 246.024 151.531369 
+Q 257.58 151.531369 257.58 147.911569 
+L 257.58 56.209969 
+Q 257.58 52.590169 246.024 52.590169 
+L 30.312 52.590169 
+Q 18.756 52.590169 18.756 56.209969 
+L 18.756 147.911569 
+Q 18.756 151.531369 30.312 151.531369 
+z
+" style="fill: #ffffff; stroke: #1565c0; stroke-width: 1.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 30.312 71.895769 
+L 246.024 71.895769 
+Q 249.876 71.895769 249.876 70.689169 
+L 249.876 56.209969 
+Q 249.876 55.003369 246.024 55.003369 
+L 30.312 55.003369 
+Q 26.46 55.003369 26.46 56.209969 
+L 26.46 70.689169 
+Q 26.46 71.895769 30.312 71.895769 
+z
+" style="fill: #1565c0; opacity: 0.85"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 284.544 151.531369 
+L 500.256 151.531369 
+Q 511.812 151.531369 511.812 147.911569 
+L 511.812 56.209969 
+Q 511.812 52.590169 500.256 52.590169 
+L 284.544 52.590169 
+Q 272.988 52.590169 272.988 56.209969 
+L 272.988 147.911569 
+Q 272.988 151.531369 284.544 151.531369 
+z
+" style="fill: #ffffff; stroke: #c62828; stroke-width: 1.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 284.544 71.895769 
+L 500.256 71.895769 
+Q 504.108 71.895769 504.108 70.689169 
+L 504.108 56.209969 
+Q 504.108 55.003369 500.256 55.003369 
+L 284.544 55.003369 
+Q 280.692 55.003369 280.692 56.209969 
+L 280.692 70.689169 
+Q 280.692 71.895769 284.544 71.895769 
+z
+" style="fill: #c62828; opacity: 0.85"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 538.776 151.531369 
+L 754.488 151.531369 
+Q 766.044 151.531369 766.044 147.911569 
+L 766.044 56.209969 
+Q 766.044 52.590169 754.488 52.590169 
+L 538.776 52.590169 
+Q 527.22 52.590169 527.22 56.209969 
+L 527.22 147.911569 
+Q 527.22 151.531369 538.776 151.531369 
+z
+" style="fill: #ffffff; stroke: #e65100; stroke-width: 1.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 538.776 71.895769 
+L 754.488 71.895769 
+Q 758.34 71.895769 758.34 70.689169 
+L 758.34 56.209969 
+Q 758.34 55.003369 754.488 55.003369 
+L 538.776 55.003369 
+Q 534.924 55.003369 534.924 56.209969 
+L 534.924 70.689169 
+Q 534.924 71.895769 538.776 71.895769 
+z
+" style="fill: #e65100; opacity: 0.85"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 30.312 257.712169 
+L 246.024 257.712169 
+Q 257.58 257.712169 257.58 254.092369 
+L 257.58 162.390769 
+Q 257.58 158.770969 246.024 158.770969 
+L 30.312 158.770969 
+Q 18.756 158.770969 18.756 162.390769 
+L 18.756 254.092369 
+Q 18.756 257.712169 30.312 257.712169 
+z
+" style="fill: #ffffff; stroke: #c62828; stroke-width: 1.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 30.312 178.076569 
+L 246.024 178.076569 
+Q 249.876 178.076569 249.876 176.869969 
+L 249.876 162.390769 
+Q 249.876 161.184169 246.024 161.184169 
+L 30.312 161.184169 
+Q 26.46 161.184169 26.46 162.390769 
+L 26.46 176.869969 
+Q 26.46 178.076569 30.312 178.076569 
+z
+" style="fill: #c62828; opacity: 0.85"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 284.544 257.712169 
+L 500.256 257.712169 
+Q 511.812 257.712169 511.812 254.092369 
+L 511.812 162.390769 
+Q 511.812 158.770969 500.256 158.770969 
+L 284.544 158.770969 
+Q 272.988 158.770969 272.988 162.390769 
+L 272.988 254.092369 
+Q 272.988 257.712169 284.544 257.712169 
+z
+" style="fill: #ffffff; stroke: #6a1b9a; stroke-width: 1.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 284.544 178.076569 
+L 500.256 178.076569 
+Q 504.108 178.076569 504.108 176.869969 
+L 504.108 162.390769 
+Q 504.108 161.184169 500.256 161.184169 
+L 284.544 161.184169 
+Q 280.692 161.184169 280.692 162.390769 
+L 280.692 176.869969 
+Q 280.692 178.076569 284.544 178.076569 
+z
+" style="fill: #6a1b9a; opacity: 0.85"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 538.776 257.712169 
+L 754.488 257.712169 
+Q 766.044 257.712169 766.044 254.092369 
+L 766.044 162.390769 
+Q 766.044 158.770969 754.488 158.770969 
+L 538.776 158.770969 
+Q 527.22 158.770969 527.22 162.390769 
+L 527.22 254.092369 
+Q 527.22 257.712169 538.776 257.712169 
+z
+" style="fill: #ffffff; stroke: #2e7d32; stroke-width: 1.5; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 538.776 178.076569 
+L 754.488 178.076569 
+Q 758.34 178.076569 758.34 176.869969 
+L 758.34 162.390769 
+Q 758.34 161.184169 754.488 161.184169 
+L 538.776 161.184169 
+Q 534.924 161.184169 534.924 162.390769 
+L 534.924 176.869969 
+Q 534.924 178.076569 538.776 178.076569 
+z
+" style="fill: #2e7d32; opacity: 0.85"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #546e7a" x="138.168" y="53.235634">Portfolio Size</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #1565c0" x="138.168" y="117.713956">£2,000,000</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #546e7a" x="392.4" y="53.169228">95% VaR (daily)</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #c62828" x="392.4" y="117.713956">£-11,230</text>
+   </g>
+   <g id="text_5">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #546e7a" x="646.632" y="53.235634">CVaR (95%)</text>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #e65100" x="646.632" y="117.713956">£-16,179</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #546e7a" x="138.168" y="159.416434">Max Drawdown</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #c62828" x="138.168" y="223.894756">£-48,908</text>
+   </g>
+   <g id="text_9">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #546e7a" x="392.4" y="159.350028">Portfolio Vol (daily)</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #6a1b9a" x="392.4" y="223.894756">0.39%</text>
+   </g>
+   <g id="text_11">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #546e7a" x="646.632" y="159.416434">Instruments</text>
+   </g>
+   <g id="text_12">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle; fill: #2e7d32" x="646.632" y="223.894756">8</text>
+   </g>
+   <g id="text_13">
+    <text style="font-weight: 700; font-size: 13px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="392.4" y="17.077969">Risk Dashboard — Portfolio Overview (Synthetic Demo)</text>
+   </g>
+  </g>
+ </g>
+</svg>

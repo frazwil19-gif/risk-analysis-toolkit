@@ -1,1 +1,124 @@
-see-below
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="712.389688pt" height="351.188438pt" viewBox="0 0 712.389688 351.188438" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 351.188438 
+L 712.389688 351.188438 
+L 712.389688 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 59.369688 328.278125 
+L 705.189687 328.278125 
+L 705.189687 26.318125 
+L 59.369688 26.318125 
+z
+" style="fill: #fafafa"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 88.725142 328.278125 
+L 135.07586 328.278125 
+L 135.07586 40.697173 
+L 88.725142 40.697173 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #c62828; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 165.976338 328.278125 
+L 212.327056 328.278125 
+L 212.327056 227.302642 
+L 165.976338 227.302642 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #1565c0; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 243.227534 328.278125 
+L 289.578252 328.278125 
+L 289.578252 247.594742 
+L 243.227534 247.594742 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #1565c0; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 320.478731 328.278125 
+L 366.829448 328.278125 
+L 366.829448 168.706009 
+L 320.478731 168.706009 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #1565c0; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 397.729927 328.278125 
+L 444.080644 328.278125 
+L 444.080644 286.958412 
+L 397.729927 286.958412 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #2e7d32; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 474.981123 328.278125 
+L 521.331841 328.278125 
+L 521.331841 190.680927 
+L 474.981123 190.680927 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #1565c0; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 552.232319 328.278125 
+L 598.583037 328.278125 
+L 598.583037 133.913665 
+L 552.232319 133.913665 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #1565c0; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 629.483515 328.278125 
+L 675.834233 328.278125 
+L 675.834233 273.020731 
+L 629.483515 273.020731 
+z
+" clip-path="url(#pdd68ea6028)" style="fill: #1565c0; stroke: #ffffff; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_15">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="111.900501" y="37.638399">£4,455</text>
+   </g>
+   <g id="text_16">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="189.151697" y="224.243868">£1,564</text>
+   </g>
+   <g id="text_17">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="266.402893" y="244.535969">£1,250</text>
+   </g>
+   <g id="text_18">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="343.654089" y="165.647236">£2,472</text>
+   </g>
+   <g id="text_19">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="420.905286" y="283.899639">£640</text>
+   </g>
+   <g id="text_20">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="498.156482" y="187.622154">£2,132</text>
+   </g>
+   <g id="text_21">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="575.407678" y="130.854891">£3,011</text>
+   </g>
+   <g id="text_22">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="652.658874" y="269.961957">£856</text>
+   </g>
+   <g id="text_23">
+    <text style="font-weight: 700; font-size: 12px; font-family: DejaVu Sans, sans-serif; text-anchor: middle" x="382.279687" y="16.318125">Instrument Volatility Contribution — Daily P&amp;L Std Dev (Synthetic Demo)</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pdd68ea6028">
+   <rect x="59.369688" y="26.318125" width="645.82" height="301.96"/>
+  </clipPath>
+ </defs>
+</svg>
